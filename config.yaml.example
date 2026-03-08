@@ -1,0 +1,30 @@
+jira:
+  url: https://your-jira-instance.atlassian.net
+  # Token can also be set via JIRA2MD_TOKEN environment variable
+  token: your-personal-access-token
+
+  # Map logical field names to Jira custom field IDs.
+  # Built-in fields (summary, status, description, assignee, priority, etc.)
+  # are resolved automatically - only map custom fields here.
+  fields:
+    story_points: customfield_10006
+    sprint: customfield_10000
+    acceptance_criteria: customfield_10035
+    # Add any custom fields you need:
+    # t_shirt_size: customfield_12345
+    # team: customfield_67890
+
+output:
+  directory: ./export
+  filename_pattern: "{key}"
+  # Which fields to include in the Markdown output, in order.
+  # Use built-in names or logical names from the fields mapping above.
+  fields:
+    - summary
+    - status
+    - assignee
+    - priority
+    - story_points
+    - sprint
+    - acceptance_criteria
+    - description
