@@ -48,6 +48,16 @@ def render_issue(issue: Issue, config: OutputConfig) -> str:
         lines.append(_format_section_value(value))
         lines.append("")
 
+    # Render comments
+    if config.include_comments and issue.comments:
+        lines.append("## Comments")
+        lines.append("")
+        for comment in issue.comments:
+            lines.append(f"### {comment.author} ({comment.created})")
+            lines.append("")
+            lines.append(comment.body)
+            lines.append("")
+
     return "\n".join(lines)
 
 

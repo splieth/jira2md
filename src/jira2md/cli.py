@@ -66,12 +66,16 @@ def _handle_export(args: argparse.Namespace, config: Config) -> None:
 
     jira = connect(config.jira)
 
+    include_comments = config.output.include_comments
+
     if args.key:
-        issue = fetch_issue(jira, args.key, config.jira)
+        issue = fetch_issue(jira, args.key, config.jira, include_comments)
         path = export_issue(issue, config.output)
         print(f"Exported: {path}")
     else:
-        issues = fetch_issues(jira, args.jql, config.jira, args.max_results)
+        issues = fetch_issues(
+            jira, args.jql, config.jira, args.max_results, include_comments
+        )
         if not issues:
             print("No issues found.")
             return

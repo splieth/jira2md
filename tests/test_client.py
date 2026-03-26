@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from jira2md.client import _resolve_issue, _resolve_value
+from jira2md.client import Comment, _resolve_issue, _resolve_value
 from jira2md.config import JiraConfig
 
 
@@ -212,3 +212,49 @@ def test_resolve_issue_builtin_name_in_custom_fields_skipped():
 
     # then — status comes from builtin resolution, not the custom mapping
     assert issue.fields["status"] == "Open"
+
+
+def test_resolve_issue_with_comments():
+    # given
+    raw_comments = [
+        SimpleNamespace(
+            author=SimpleNamespace(displayName="Alice"),
+            created="2024-01-15T10:30:00.000+0000",
+            body="Looks good to me.",
+        ),
+        SimpleNamespace(
+            author=SimpleNamespace(displayName="Bob"),
+            created="2024-01-16T14:00:00.000+0000",
+            body="Merging now.",
+        ),
+    ]
+    raw = _make_raw_issue(
+        key="PROJ-50",
+        summary="With comments",
+        comment=SimpleNamespace(comments=raw_comments),
+    )
+    config = JiraConfig(url="", token="", fields={})
+
+    # when
+    issue = _resolve_issue(raw, config, include_comments=True)
+
+    # then
+    assert len(issue.comments) == 2
+    assert issue.comments[0] == Comment(
+        author="Alice",
+        created="2024-01-15T10:30:00.000+0000",
+        body="Looks good to me.",
+    )
+    assert issue.comments[1].author == "Bob"
+
+
+def test_resolve_issue_without_comments_by_default():
+    # given
+    raw = _make_raw_issue(key="PROJ-51")
+    config = JiraConfig(url="", token="", fields={})
+
+    # when
+    issue = _resolve_issue(raw, config)
+
+    # then
+    assert issue.comments == []

@@ -17,6 +17,8 @@ jira:
 output:
   directory: ./export
   filename_pattern: "{key}"
+  # Include issue comments in the Markdown output
+  include_comments: true
   # Which fields to include in the Markdown output, in order.
   # Use built-in names or logical names from the fields mapping above.
   fields:

@@ -1,4 +1,4 @@
-from jira2md.client import Issue
+from jira2md.client import Comment, Issue
 from jira2md.config import OutputConfig
 from jira2md.renderer import render_issue
 
@@ -126,3 +126,89 @@ def test_render_list_values_in_table():
 
     # then
     assert "bug, urgent" in md
+
+
+def test_render_with_comments():
+    # given
+    issue = Issue(
+        key="PROJ-300",
+        fields={
+            "key": "PROJ-300",
+            "summary": "Issue with comments",
+            "status": "Open",
+        },
+        comments=[
+            Comment(
+                author="Alice",
+                created="2024-01-15T10:30:00.000+0000",
+                body="This needs investigation.",
+            ),
+            Comment(
+                author="Bob",
+                created="2024-01-16T14:00:00.000+0000",
+                body="I found the root cause.",
+            ),
+        ],
+    )
+    config = OutputConfig(
+        fields=["summary", "status"],
+        include_comments=True,
+    )
+
+    # when
+    md = render_issue(issue, config)
+
+    # then
+    assert "## Comments" in md
+    assert "### Alice (2024-01-15T10:30:00.000+0000)" in md
+    assert "This needs investigation." in md
+    assert "### Bob (2024-01-16T14:00:00.000+0000)" in md
+    assert "I found the root cause." in md
+
+
+def test_render_without_comments_when_disabled():
+    # given
+    issue = Issue(
+        key="PROJ-301",
+        fields={
+            "key": "PROJ-301",
+            "summary": "No comments",
+            "status": "Open",
+        },
+        comments=[
+            Comment(author="Alice", created="2024-01-15", body="Hello"),
+        ],
+    )
+    config = OutputConfig(
+        fields=["summary", "status"],
+        include_comments=False,
+    )
+
+    # when
+    md = render_issue(issue, config)
+
+    # then
+    assert "## Comments" not in md
+
+
+def test_render_no_comments_section_when_empty():
+    # given
+    issue = Issue(
+        key="PROJ-302",
+        fields={
+            "key": "PROJ-302",
+            "summary": "Empty comments",
+            "status": "Open",
+        },
+        comments=[],
+    )
+    config = OutputConfig(
+        fields=["summary", "status"],
+        include_comments=True,
+    )
+
+    # when
+    md = render_issue(issue, config)
+
+    # then
+    assert "## Comments" not in md

@@ -7,9 +7,17 @@ from .config import BUILTIN_FIELDS, JiraConfig
 
 
 @dataclass
+class Comment:
+    author: str
+    created: str
+    body: str
+
+
+@dataclass
 class Issue:
     key: str
     fields: dict[str, Any] = field(default_factory=dict)
+    comments: list[Comment] = field(default_factory=list)
 
 
 def connect(config: JiraConfig) -> JIRA:
@@ -17,21 +25,32 @@ def connect(config: JiraConfig) -> JIRA:
     return JIRA(server=config.url, token_auth=config.token)
 
 
-def fetch_issue(jira: JIRA, key: str, config: JiraConfig) -> Issue:
+def fetch_issue(
+    jira: JIRA, key: str, config: JiraConfig, include_comments: bool = False
+) -> Issue:
     """Fetch a single issue and resolve fields according to config."""
     raw = jira.issue(key)
-    return _resolve_issue(raw, config)
+    return _resolve_issue(raw, config, include_comments=include_comments)
 
 
 def fetch_issues(
-    jira: JIRA, jql: str, config: JiraConfig, max_results: int = 50
+    jira: JIRA,
+    jql: str,
+    config: JiraConfig,
+    max_results: int = 50,
+    include_comments: bool = False,
 ) -> list[Issue]:
     """Fetch issues via JQL and resolve fields."""
     raw_issues = jira.search_issues(jql, maxResults=max_results)
-    return [_resolve_issue(raw, config) for raw in raw_issues]
+    return [
+        _resolve_issue(raw, config, include_comments=include_comments)
+        for raw in raw_issues
+    ]
 
 
-def _resolve_issue(raw: Any, config: JiraConfig) -> Issue:
+def _resolve_issue(
+    raw: Any, config: JiraConfig, include_comments: bool = False
+) -> Issue:
     """Convert a raw Jira issue into our Issue dataclass with resolved fields."""
     resolved: dict[str, Any] = {}
 
@@ -50,7 +69,16 @@ def _resolve_issue(raw: Any, config: JiraConfig) -> Issue:
         raw_value = getattr(raw.fields, field_id, None)
         resolved[logical_name] = _resolve_value(raw_value)
 
-    return Issue(key=raw.key, fields=resolved)
+    comments: list[Comment] = []
+    if include_comments:
+        raw_comments = getattr(getattr(raw.fields, "comment", None), "comments", [])
+        for c in raw_comments:
+            author = _resolve_value(c.author) if hasattr(c, "author") else "Unknown"
+            created = getattr(c, "created", "")
+            body = getattr(c, "body", "")
+            comments.append(Comment(author=str(author), created=created, body=body))
+
+    return Issue(key=raw.key, fields=resolved, comments=comments)
 
 
 def _resolve_value(value: Any) -> Any:

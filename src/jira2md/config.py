@@ -47,6 +47,7 @@ class OutputConfig:
             "description",
         ]
     )
+    include_comments: bool = False
 
 
 @dataclass
@@ -114,6 +115,7 @@ def _parse_config(data: dict[str, Any]) -> Config:
         directory=output_data.get("directory", "./export"),
         filename_pattern=output_data.get("filename_pattern", "{key}"),
         fields=output_data.get("fields", OutputConfig().fields),
+        include_comments=output_data.get("include_comments", False),
     )
 
     return Config(jira=jira_config, output=output_config)
