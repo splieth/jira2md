@@ -98,6 +98,16 @@ markdown = render_issue(issue, config.output)
 print(markdown)
 ```
 
+## Releasing
+
+```bash
+./scripts/release.sh patch  # 0.1.0 → 0.1.1
+./scripts/release.sh minor  # 0.1.0 → 0.2.0
+./scripts/release.sh major  # 0.1.0 → 1.0.0
+```
+
+This bumps the version in `pyproject.toml`, commits, tags, and pushes. The push triggers a GitHub Actions workflow that publishes the package to PyPI.
+
 ## License
 
 MIT
