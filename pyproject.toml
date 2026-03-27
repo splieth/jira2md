@@ -2,6 +2,7 @@
 name = "jira2md"
 version = "0.2.0"
 description = "Export Jira issues to Markdown files"
+readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "jira>=3.10",
